@@ -12,7 +12,7 @@ de cilindros e lacres inteligentes.
 
 ---
 
-# 🎯 Objetivo
+# Objetivo
 
 Garantir a gestão completa do ciclo de vida dos ativos monitorados através de:
 
@@ -28,7 +28,7 @@ Garantir a gestão completa do ciclo de vida dos ativos monitorados através de:
 
 ---
 
-# 🏗 Arquitetura
+# Arquitetura
 
 ```text
 ESP32
@@ -47,7 +47,7 @@ O banco PostgreSQL é a fonte oficial dos dados do sistema.
 
 ---
 
-# 🛠 Tecnologias
+# Tecnologias
 
 - PostgreSQL
 - SQL
@@ -57,7 +57,7 @@ O banco PostgreSQL é a fonte oficial dos dados do sistema.
 
 ---
 
-# 📦 Estrutura
+# Estrutura
 
 ```text
 schema/
@@ -94,7 +94,7 @@ Documentação técnica e funcional.
 
 ---
 
-# 📂 Principais Módulos
+# Principais Módulos
 
 ## Identidade e Acesso
 
@@ -186,7 +186,7 @@ auditoria
 
 ---
 
-# ✅ Estado Atual do Projeto
+# Estado Atual do Projeto
 
 ## Banco de Dados
 
@@ -216,7 +216,7 @@ auditoria
 
 ---
 
-# 🚀 Próximas Etapas
+# Próximas Etapas
 
 ## API
 
@@ -238,7 +238,7 @@ auditoria
 
 ---
 
-# 📖 Documentação
+# Documentação
 
 A documentação técnica completa encontra-se na pasta:
 
