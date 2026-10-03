@@ -1,0 +1,405 @@
+# FluxID
+
+## Especificação Atualizada do MVP e do Banco de Dados
+
+**Segurança • Rastreabilidade • Controle Operacional**
+
+Versão 3.0 — consolidada após modelagem, criação e população do banco.
+
+Documento substitutivo da versão 1 anexada.
+
+---
+
+# 1. Controle da atualização
+
+Esta versão atualiza integralmente o documento FluxID_Especificacao_MVP_v1.docx com todas as decisões tomadas durante a modelagem, a estrutura efetivamente criada no PostgreSQL e a massa de testes confirmada no pgAdmin.
+
+| Item | Situação atual |
+|--------|--------|
+| Escopo do MVP | Congelado: segurança, rastreabilidade e controle operacional |
+| Modelo de dados | Criado e populado para testes |
+| Telemetria atual | Latitude e longitude em colunas NUMERIC |
+| PostGIS | Planejado para evolução de geocercas; ainda não refletido na tabela atual de telemetria |
+| Views e triggers | Adiados para depois dos testes CRUD da API |
+| Próxima fase | API NestJS + TypeScript conectada ao PostgreSQL |
+
+---
+
+# 2. Visão do produto e cadeia de negócio
+
+**FluxID → Distribuidora de gases → Hospital, clínica ou indústria**
+
+A FluxID não vende gás, cilindros ou transporte.
+
+A FluxID fornece plataforma, lacres inteligentes, rastreabilidade e controle operacional.
+
+O cilindro é o ativo principal do MVP.
+
+O cilindro continua pertencendo à distribuidora; no destinatário ocorre transferência de custódia, não de propriedade.
+
+O cliente final não possui login no MVP.
+
+Usuário é somente a pessoa que opera o sistema.
+
+A FluxID administra o ambiente global e mantém governança sobre dados sensíveis.
+
+---
+
+# 3. Escopo final do MVP
+
+| Pilar | Entregas do MVP |
+|---------|---------|
+| Segurança | Integridade do lacre, eventos de abertura/violação, alertas, controle de acesso, permissões e auditoria |
+| Rastreabilidade | GPS, velocidade, histórico de telemetria, vínculos, movimentações, entregas e custódias |
+| Controle operacional | Cadastros, estados de ativos, busca amigável, testes hidrostáticos, inspeções e consultas gerenciais |
+
+## Fora do MVP
+
+- Financeiro e faturamento
+- Portal do cliente final
+- Gestão de contratos avançada
+- Outros ativos além de cilindros
+- Inteligência artificial e previsão de perdas
+- Integração produtiva com ERP
+- Workflow avançado de aprovações
+
+---
+
+# 4. Regras de negócio consolidadas
+
+| Código | Regra |
+|---------|---------|
+| RN01 | Cada entidade operacional relevante possui UUID interno e código humano pesquisável |
+| RN02 | Cada cilindro possui número de série único no escopo da organização |
+| RN03 | Cada lacre possui código e UID NFC únicos |
+| RN04 | Um cilindro pode ter somente um lacre ativo por vez |
+| RN05 | Um lacre pode ter somente um dispositivo ativo por vez |
+| RN06 | O cilindro continua sendo propriedade da distribuidora |
+| RN07 | Movimentações e entregas podem conter vários cilindros |
+| RN08 | Manipulação não autorizada gera evento e alerta |
+| RN09 | Abertura no cliente só é regular com autorização registrada |
+| RN10 | Geocerca inicial de 10 metros configurável |
+| RN11 | Saída da área permitida gera alerta |
+| RN12 | Velocidade GPS deve ser armazenada |
+| RN13 | Telemetria armazena data, posição, velocidade, bateria, GSM e payload |
+| RN14 | `message_id` deve ser único |
+| RN15 | Teste hidrostático gera alerta de vencimento |
+| RN16 | Lacre possui revisão a cada cinco anos |
+| RN17 | Estados usam valores controlados |
+| RN18 | Usuários pertencem a uma organização |
+| RN19 | Ações privilegiadas devem ser auditadas |
+| RN20 | Toda alteração relevante deve ser registrada |
+| RN21 | Histórico operacional não deve ser apagado |
+| RN22 | Isolamento total entre organizações |
+| RN23 | Alertas possuem ciclo de vida rastreável |
+
+---
+
+# 5. Requisitos funcionais
+
+| Código | Requisito |
+|---------|---------|
+| RF01 | Gerenciar organizações e contatos |
+| RF02 | Gerenciar usuários, perfis e permissões |
+| RF03 | Gerenciar destinatários e locais |
+| RF04 | CRUD de cilindros, lacres e dispositivos |
+| RF05 | Vincular e desvincular ativos |
+| RF06 | Criar movimentações em lote |
+| RF07 | Criar entregas e custodias |
+| RF08 | Receber e consultar telemetria |
+| RF09 | Registrar eventos do lacre |
+| RF10 | Gerenciar alertas |
+| RF11 | Registrar testes hidrostáticos |
+| RF12 | Registrar inspeções de lacre |
+| RF13 | Pesquisar por código, série e NFC |
+| RF14 | Exibir contagens para dashboards |
+| RF15 | Auditar ações críticas |
+| RF16 | Disponibilizar API REST |
+
+---
+
+# 6. Requisitos não funcionais
+
+| Código | Requisito |
+|---------|---------|
+| RNF01 | PostgreSQL como banco transacional |
+| RNF02 | API em NestJS + TypeScript |
+| RNF03 | JWT e autorização por perfis |
+| RNF04 | Senhas com hash forte |
+| RNF05 | Isolamento multiempresa |
+| RNF06 | TIMESTAMPTZ e UTC |
+| RNF07 | Integridade referencial |
+| RNF08 | Telemetria indexada |
+| RNF09 | Operações transacionais |
+| RNF10 | Erros padronizados |
+| RNF11 | Backup e auditoria formalizados |
+| RNF12 | Conformidade LGPD |
+| RNF13 | Usuário PostgreSQL próprio |
+| RNF14 | Código humano pesquisável |
+
+---
+
+# 7. Modelo Entidade–Relacionamento
+
+O MER representa a arquitetura lógica consolidada. A implementação atual mantém latitude e longitude numéricas. A coluna `geography` permanece como evolução planejada com PostGIS.
+
+![EMBEDDEDIMAGE](placeholder-0)
+
+---
+
+# 8. Estrutura do banco criada
+
+| Módulo | Tabelas |
+|---------|---------|
+| Identidade e acesso | organizacoes, organizacao_contatos, usuarios, perfis, permissoes, perfil_permissoes, usuario_perfis |
+| Clientes finais | destinatarios, locais_entrega |
+| Ativos | cilindros, lacres, dispositivos |
+| Histórico de vínculos | vinculos_cilindro_lacre, vinculos_dispositivo_lacre |
+| Logística | movimentacoes, movimentacao_itens, entregas, entrega_itens, custodias |
+| IoT e segurança | telemetrias, eventos_lacre, alertas |
+| Conformidade | testes_hidrostaticos, inspecoes_lacre |
+| Governança | auditoria |
+
+---
+
+# 9. Explicação detalhada das tabelas
+
+## organizacoes
+Representa a FluxID e distribuidoras contratantes.
+
+## organizacao_contatos
+Permite vários contatos por organização.
+
+## usuarios
+Pessoas que acessam o sistema.
+
+## perfis / permissoes
+Implementam RBAC.
+
+## destinatarios
+Hospitais, clínicas e indústrias.
+
+## locais_entrega
+Locais físicos dos destinatários.
+
+## cilindros
+Ativo principal.
+
+## lacres
+Ativo de segurança.
+
+## dispositivos
+Módulo eletrônico de telemetria.
+
+## vinculos_cilindro_lacre
+Histórico de instalação e remoção.
+
+## vinculos_dispositivo_lacre
+Histórico de associação.
+
+## movimentacoes / itens
+Eventos operacionais em lote.
+
+## entregas / itens
+Missões de entrega.
+
+## custodias
+Controle de posse temporária.
+
+## telemetrias
+Latitude, longitude, velocidade, bateria, GSM, JSONB e message_id.
+
+## eventos_lacre
+Abertura, fechamento, violação e troca.
+
+## alertas
+Ocorrências acionáveis.
+
+## testes_hidrostaticos
+Histórico de testes.
+
+## inspecoes_lacre
+Histórico de revisões.
+
+## auditoria
+Registro de alterações.
+
+---
+
+# 10. Estados e códigos utilizados
+
+## Cilindro
+
+Código: `CIL-000001`
+
+Estados:
+
+- DISPONIVEL
+- EM_TRANSITO
+- COM_CLIENTE
+- MANUTENCAO
+- EXTRAVIADO
+- INATIVO
+
+## Lacre
+
+Código: `LCR-000001`
+
+Estados:
+
+- EM_ESTOQUE
+- INSTALADO
+- SUSPEITA_VIOLACAO
+- ROMPIDO
+- REMOVIDO
+- DANIFICADO
+- INUTILIZADO
+
+## Dispositivo
+
+Código: `DSP-000001`
+
+Estados:
+
+- ativo
+- inativo
+
+## Entrega
+
+Código: `ENT-000001`
+
+Estados:
+
+- PENDENTE
+- EM_ANDAMENTO
+- CONCLUIDA
+- CANCELADA
+
+## Alerta
+
+Código: `ALT-000001`
+
+Estados:
+
+- ABERTO
+- EM_ANALISE
+- ENCERRADO
+
+Severidades:
+
+- BAIXA
+- MEDIA
+- ALTA
+- CRITICA
+
+---
+
+# 11. Massa de testes confirmada
+
+| Tabela | Registros |
+|---------|---------|
+| organizacoes | 3 |
+| usuarios | 3 |
+| destinatarios | 20 |
+| locais_entrega | 20 |
+| cilindros | 50 |
+| lacres | 50 |
+| dispositivos | 50 |
+| telemetrias | 200 |
+| eventos_lacre | 10 |
+| alertas | 10 |
+| testes_hidrostaticos | 50 |
+| inspecoes_lacre | 50 |
+| auditoria | 3 |
+
+> A massa é sintética e destinada exclusivamente para desenvolvimento e testes.
+
+---
+
+# 12. Situação atual e pendências técnicas
+
+- Carga principal validada no pgAdmin
+- Telemetria ainda utiliza latitude/longitude NUMERIC
+- Migração para PostGIS pendente
+- Views de dashboard pendentes
+- Triggers de auditoria pendentes
+- Índices únicos parciais precisam de validação
+- Apenas usuários de teste cadastrados
+- Políticas RLS, backup, LGPD e observabilidade ainda em definição
+
+---
+
+# 13. Próxima fase — API REST em TypeScript
+
+## Stack recomendada
+
+- NestJS
+- TypeScript
+- PostgreSQL
+- Prisma ou TypeORM
+- JWT
+- Swagger
+
+## Sequência de implementação
+
+1. Criar projeto NestJS
+2. Criar usuário PostgreSQL da aplicação
+3. Configurar `.env`
+4. Mapear tabelas
+5. Validação de DTOs
+6. Autenticação e autorização
+7. CRUDs administrativos
+8. CRUDs de ativos
+9. Transações operacionais
+10. Telemetria e alertas
+11. Testes Swagger/Postman
+12. Views e triggers
+
+---
+
+# 14. CRUD e rotas iniciais previstas
+
+| Recurso | Rotas |
+|---------|---------|
+| Organizações | GET, POST, PATCH |
+| Usuários | CRUD completo |
+| Destinatários | CRUD |
+| Locais de entrega | CRUD |
+| Cilindros | CRUD e filtros |
+| Lacres | CRUD e histórico |
+| Dispositivos | CRUD |
+| Vínculos | Vincular e remover |
+| Entregas | Criar, iniciar, concluir |
+| Movimentações | Operações em lote |
+| Custódias | Abrir, encerrar |
+| Telemetrias | Ingestão e consulta |
+| Alertas | Analisar e encerrar |
+| Conformidade | CRUD |
+
+---
+
+# 15. Critérios de aceite
+
+- API conecta sem privilégios de superusuário
+- Swagger executa todos os CRUDs
+- DTOs validam entradas
+- Respeito ao escopo organizacional
+- Uso de transações
+- Sem DELETE físico de histórico
+- Erros convertidos em respostas HTTP legíveis
+- Base preparada para auditoria automática
+
+---
+
+# 16. Assunções e ressalvas
+
+- A massa de testes foi extraída das contagens do pgAdmin.
+- O MER já reflete a evolução para PostGIS.
+- SLA, RPO, RTO e frequência de telemetria ainda não foram definidos.
+- O schema SQL e migrations devem continuar sendo a fonte executável oficial do projeto.
+
+---
+
+# MVP
+
+**Segurança • Rastreabilidade • Controle Operacional**
